@@ -33,19 +33,21 @@ import qualified Sound.MIDI.File.Event.Meta       as Meta
 import qualified Sound.MIDI.Util                  as U
 
 data DrumTrack t = DrumTrack
-  { drumDifficulties   :: Map.Map Difficulty (DrumDifficulty t)
-  , drumMood           :: RTB.T t Mood
-  , drumToms           :: RTB.T t (ProColor, ProType)
-  , drumSingleRoll     :: RTB.T t (Maybe LaneDifficulty)
-  , drumDoubleRoll     :: RTB.T t (Maybe LaneDifficulty)
-  , drumOverdrive      :: RTB.T t Bool -- ^ white notes to gain energy
-  , drumActivation     :: RTB.T t Bool -- ^ drum fill to activate Overdrive, or BRE
-  , drumSolo           :: RTB.T t Bool
-  , drumPlayer1        :: RTB.T t Bool
-  , drumPlayer2        :: RTB.T t Bool
-  , drumKick2x         :: RTB.T t () -- no accent support yet
-  , drumAnimation      :: RTB.T t Animation
-  , drumEnableDynamics :: RTB.T t ()
+  { drumDifficulties     :: Map.Map Difficulty (DrumDifficulty t)
+  , drumMood             :: RTB.T t Mood
+  , drumToms             :: RTB.T t (ProColor, ProType)
+  , drumSingleRoll       :: RTB.T t (Maybe LaneDifficulty)
+  , drumDoubleRoll       :: RTB.T t (Maybe LaneDifficulty)
+  , drumOverdrive        :: RTB.T t Bool -- ^ white notes to gain energy
+  , drumActivation       :: RTB.T t Bool -- ^ drum fill to activate Overdrive, or BRE
+  , drumExpertForcedNote :: RTB.T t Bool -- ^ Forced note for drums "hopo" for FNF conversions
+  , drumHardForcedNote   :: RTB.T t Bool -- ^ Forced note for drums "hopo" for FNF conversions
+  , drumSolo             :: RTB.T t Bool
+  , drumPlayer1          :: RTB.T t Bool
+  , drumPlayer2          :: RTB.T t Bool
+  , drumKick2x           :: RTB.T t () -- no accent support yet
+  , drumAnimation        :: RTB.T t Animation
+  , drumEnableDynamics   :: RTB.T t ()
   } deriving (Eq, Ord, Show, Generic)
     deriving (Semigroup, Monoid, Mergeable) via GenericMerge (DrumTrack t)
 
@@ -57,6 +59,8 @@ instance ChopTrack DrumTrack where
     , drumSingleRoll   = chopTakeMaybe t $ drumSingleRoll dt
     , drumDoubleRoll   = chopTakeMaybe t $ drumDoubleRoll dt
     , drumOverdrive    = chopTakeBool t $ drumOverdrive dt
+    , drumExpertForcedNote = chopDropBool t $ drumExpertForcedNote dt
+    , drumHardForcedNote = chopDropBool t $ drumHardForcedNote dt
     , drumActivation   = chopTakeBool t $ drumActivation dt
     , drumSolo         = chopTakeBool t $ drumSolo dt
     , drumPlayer1      = chopTakeBool t $ drumPlayer1 dt
@@ -72,6 +76,8 @@ instance ChopTrack DrumTrack where
     , drumSingleRoll   = chopDropMaybe t $ drumSingleRoll dt
     , drumDoubleRoll   = chopDropMaybe t $ drumDoubleRoll dt
     , drumOverdrive    = chopDropBool t $ drumOverdrive dt
+    , drumExpertForcedNote = chopDropBool t $ drumExpertForcedNote dt
+    , drumHardForcedNote = chopDropBool t $ drumHardForcedNote dt
     , drumActivation   = chopDropBool t $ drumActivation dt
     , drumSolo         = chopDropBool t $ drumSolo dt
     , drumPlayer1      = chopDropBool t $ drumPlayer1 dt
@@ -85,10 +91,10 @@ nullDrums :: DrumTrack t -> Bool
 nullDrums = all (RTB.null . drumGems) . toList . drumDifficulties
 
 instance TraverseTrack DrumTrack where
-  traverseTrack fn (DrumTrack a b c d e f g h i j k l m) = DrumTrack
+  traverseTrack fn (DrumTrack a b c d e f g h i j k l m n o) = DrumTrack
     <$> traverse (traverseTrack fn) a
     <*> fn b <*> fn c <*> fn d <*> fn e <*> fn f <*> fn g <*> fn h
-    <*> fn i <*> fn j <*> fn k <*> fn l <*> fn m
+    <*> fn i <*> fn j <*> fn k <*> fn l <*> fn m <*> fn n <*> fn o
 
 data Animation
   = Tom1       Hand -- ^ The high tom.
@@ -97,7 +103,7 @@ data Animation
   | Hihat      Hand
   | Snare  Hit Hand
   | Ride       Hand
-  | Crash1 Hit Hand -- ^ The left crash, closer to the hihat.
+  | Crash1 Hit Hand -- ^ The left crash, closer to the hihat. 
   | Crash2 Hit Hand -- ^ The right crash, closer to the ride.
   | KickRF
   | Crash1RHChokeLH
@@ -202,6 +208,8 @@ instance ParseTrack DrumTrack where
     drumSingleRoll <- drumSingleRoll =. edgesLanes 126
     drumDoubleRoll <- drumDoubleRoll =. edgesLanes 127
     drumOverdrive <- drumOverdrive =. edges 116
+    drumExpertForcedNote <- drumExpertForcedNote =. edges 102
+    drumHardForcedNote <- drumHardForcedNote =. edges 90
     drumActivation <- drumActivation =. edgesBRE [120 .. 124]
     drumSolo <- drumSolo =. edges 103
     drumPlayer1 <- drumPlayer1 =. edges 105

@@ -30,7 +30,7 @@ opus:
 
 flac:
 	cd libs/flac && ./autogen.sh
-	cd libs/flac && env PKG_CONFIG_PATH=$(current_dir)/root/lib/pkgconfig ./configure --prefix=$(current_dir)/root
+	cd libs/flac && env PKG_CONFIG_PATH=$(current_dir)/root/lib/pkgconfig LDFLAGS="-lssp" ./configure --prefix=$(current_dir)/root
 	cd libs/flac && make
 	cd libs/flac && make install
 

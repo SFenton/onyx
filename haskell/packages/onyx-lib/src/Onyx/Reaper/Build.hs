@@ -547,7 +547,7 @@ drumNoteNames = execWriter $ do
   o 110 "PRO Yellow Tom"
   x 108
   o 103 "Solo Marker"
-  x 102
+  o 102 "Forced HOPO Note"
   o 100 "EXPERT Green"
   o 99 "EXPERT Blue"
   o 98 "EXPERT Yellow"
